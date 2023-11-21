@@ -18,6 +18,11 @@ This microservice provides an API endpoint to fetch a random League of Legends c
 Run the microservice using the command: `python LOLmicroservice.py`.
 The service will be available at `http://localhost:5000/random-champion` or `http://127.0.0.1:5000/random-champion`.
 
+## Testing with Python File
+Run the microservice using the command: `python LOLmicroservice.py`. 
+Then run the test file: `python testMicroservice.py`. You should be able to get a 
+randomly generated champion name alongside a link to an image of the champion.
+
 ## Usage in Your Project
 To use this microservice in your project, you can make an HTTP GET request to the `/random-champion` endpoint. 
 
