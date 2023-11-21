@@ -1,0 +1,21 @@
+
+Communication Flow for my Project
+My project sends a request to partner's microservice. For instance, this 
+could be to set or check a stock price alert.
+
+Partner's micrservice processes the incoming request, performs the necesssary 
+actions such as setting up a stock price alert. 
+
+After processing the request, your partner's microservice sends the response back to your individual 
+project. This response could be a confirmation of the alert setup, a stock
+price update, etc.
+
+Communication Flow for Partner's Project
+Partner's project sends a request to my microservice, which is getting a random League of Legends champion
+name.
+
+My microservice handles the request, selecting a random champion name from the list or through any other 
+logic you've implemented.
+
+My microservice then sends back the response to your partner's project, such as the name of a 
+randomly selected champion. 

@@ -1,0 +1,32 @@
+# Random League of Legends Champion Microservice
+
+## Introduction
+This microservice provides an API endpoint to fetch a random League of Legends champion's name and image URL.
+
+## Requirements
+- Python 3.x
+- Flask
+- Requests
+
+## Installation and Setup
+1. Clone the repository: `git clone https://github.com/aseabroo/LOLmicroservice.git`.
+2. Navigate to the repository directory: `cd LOLmicroservice`.
+3. (Optional) Set up a virtual environment: `python -m venv venv` and activate it.
+4. Install required packages: `pip install -r requirements.txt`.
+
+## Running the Microservice
+Run the microservice using the command: `python LOLmicroservice.py`.
+The service will be available at `http://localhost:5000/random-champion` or `http://127.0.0.1:5000/random-champion`.
+
+## Usage in Your Project
+To use this microservice in your project, you can make an HTTP GET request to the `/random-champion` endpoint. 
+
+## API Endpoint Details
+Endpoint: `/random-champion`
+Method: GET
+Response Format: JSON
+Example Response:
+json
+Copy code
+{ "champion": "Ahri", "image": "[Image URL]" }
+
