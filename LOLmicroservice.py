@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template_string
 import requests
 import random
 
@@ -33,6 +33,13 @@ def fetch_champion_data():
     else:
         return "Failed to fetch data"
 
+@app.route('/')
+def index():
+    return jsonify({
+        'message': "League of Legends (LOL) Microservice is running.",
+        'usage': ["/random-champion", "/view-champion"],
+    })
+
 @app.route('/random-champion', methods=['GET'])
 def random_champion():
     """
@@ -48,5 +55,26 @@ def random_champion():
     else:
         return jsonify({"error": "Unable to fetch champion data"}), 500
 
+@app.route('/view-champion')
+def view_champion():
+    """
+    Endpoint to view all League of Legends champions' data.
+
+    Returns:
+        JSON: A JSON object containing all champions' data.
+    """
+    data = fetch_champion_data()
+    if data:
+        _, champ = random.choice(list(data.items()))
+        return render_template_string("""
+            <html><body style="text-align: center;">
+                <h1>{{ name }}</h1>
+                <img src="{{ image }}" alt="{{ name }}" style=height: 300px;"/>
+                <p><a href="/view-champion"> New Random Champion</a></p>
+            </body></html> 
+        """, **champ)
+    return "<h1> Error loading champion data </h1>", 500
+   
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host="127.0.0.1",  port=5000, debug=True)
