@@ -1,48 +1,32 @@
-# Random League of Legends champion
+# Champion Randomizer Service
 
-A small Python/Flask service that fetches champion data from Riot's Data Dragon and returns a random champion as JSON or a simple HTML page.
+A small Flask service that fetches League of Legends champion metadata from Riot's Data Dragon and returns a random champion through a JSON API or a lightweight HTML interface.
 
-## Run locally
+## What it demonstrates
 
-Use Python 3.10 or newer.
+- Python and Flask API development
+- external HTTP service integration
+- response normalization and validation
+- timeout and failure handling
+- TTL caching
+- dependency injection for testability
+- mocked upstream responses with pytest
+- JSON and server-rendered HTML responses
+- GitHub Actions CI
 
-```bash
-git clone https://github.com/aseabroo/LOLmicroservice.git
-cd LOLmicroservice
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python LOLmicroservice.py
-```
-
-On Windows, activate the environment with `.venv\Scripts\activate`.
+## API
 
 | Route | Response |
 | --- | --- |
-| `/` | Service message and available routes |
-| `/random-champion` | One champion's name, image URL, and sprite coordinates |
-| `/view-champion` | A simple HTML page for one champion |
+| `/` | Service metadata |
+| `/api/random-champion` | Random champion as JSON |
+| `/view-champion` | Random champion HTML page |
 
-Open http://127.0.0.1:5000/view-champion. Champion requests need an internet connection.
-
-If champion data is unavailable, both champion routes return HTTP `503`. The JSON route returns an error object; the HTML route displays a short message. The upstream request has a five-second timeout. This is a network timeout, not a guarantee that the entire request finishes within five seconds.
-
-## Tests
-
-With the environment activated:
-
-```bash
-python -m pytest test_app.py -q
-```
-
-The 17 test cases use Flask's test client and replace the upstream HTTP request with a controlled response. No running server or internet connection is needed for these tests.
-
-They check successful JSON and HTML responses, request timeouts, connection failures, upstream HTTP errors, invalid JSON, and empty or malformed champion data. The small hand-written [fixture](tests/fixtures/champions.json) keeps the successful result predictable; it is not a live Data Dragon snapshot.
-
-For example, the JSON route returns this result with that fixture:
+Example response:
 
 ```json
 {
+  "id": "Ahri",
   "name": "Ahri",
   "image": "https://ddragon.leagueoflegends.com/cdn/13.23.1/img/champion/Ahri.png",
   "sprite": "champion0.png",
@@ -53,26 +37,126 @@ For example, the JSON route returns this result with that fixture:
 }
 ```
 
-These tests do not verify the live Riot service or download the champion image.
+## Architecture
 
-`testMicroservice.py` provides a manual preview against a running server. `main.py` is an optional macOS/Linux helper that starts the server, runs the preview and tests, and waits for Enter before stopping the server on the successful path.
+```text
+Browser / API client
+        |
+        v
+      Flask
+        |
+        v
+ChampionRepository
+   |          |
+   |          +---- TTL cache
+   |
+   +---- Riot Data Dragon
+```
 
-## A small maintenance change
+The Flask layer is intentionally thin. Data fetching, normalization, caching, and upstream error handling live in `ChampionRepository`.
 
-The September 2026 update adds a request timeout and a consistent failure result. Previously, the fetch function sometimes returned an error string, which the HTML route then treated as a dictionary. It also let network and JSON errors escape. Both routes now handle unavailable data explicitly.
+## Caching behavior
 
-This update and its tests were developed with AI assistance. The original project remains a small learning application. A [request walkthrough](docs/request-walkthrough.md) explains the code and includes questions to practice answering.
+Successful champion metadata is cached in memory for a configurable TTL. This avoids downloading the full champion dataset on every request.
 
-## Limitations and next steps
+If the cache has expired and Data Dragon temporarily fails, the repository serves the last successful cached value when one exists. If no usable value has ever been cached, the application returns HTTP `503`.
 
-- The data URL is fixed to patch `13.23.1`.
-- Every champion request downloads the data again; there is no cache or retry policy.
-- The checks cover common unusable responses, not a complete validation of every field in Riot's schema.
-- The helper needs reliable cleanup when a test fails.
-- A fresh live-data demo still needs to be checked separately.
+## Configuration
 
-## Diagram and data source
+Copy:
 
-![Original service diagram](uml_diagram.png)
+```bash
+cp .env.example .env
+```
 
-Champion data and images come from [Riot Games Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Original project by Augustus Seabrooke; see [LICENSE](LICENSE).
+Supported environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `5000` | Local Flask port |
+| `DDRAGON_PATCH` | `13.23.1` | Data Dragon patch |
+| `UPSTREAM_TIMEOUT_SECONDS` | `5` | Riot request timeout |
+| `CACHE_TTL_SECONDS` | `900` | Champion metadata cache lifetime |
+
+The application reads these variables from the environment. A shell or process manager can load `.env`; the file is provided as a configuration example rather than committed credentials.
+
+## Run locally
+
+```bash
+git clone https://github.com/aseabroo/champion-randomizer-service.git
+cd champion-randomizer-service
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python app.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5000/view-champion
+```
+
+## Tests
+
+```bash
+python -m pytest -q
+```
+
+The automated tests do not require a running server or internet connection. Data Dragon requests are replaced with controlled responses and a small fixture.
+
+Coverage includes:
+
+- successful JSON response
+- HTML rendering
+- caching
+- request timeouts
+- connection failures
+- upstream HTTP failures
+- invalid JSON
+- malformed champion data
+- stale-cache fallback
+- `503` behavior when no usable data exists
+
+## Demo client
+
+With the server running:
+
+```bash
+python demo_client.py
+```
+
+The demo client calls the JSON endpoint and prints the selected champion and image URL.
+
+## Project Structure
+
+```text
+champion-randomizer-service/
+├── app.py
+├── champion_data.py
+├── demo_client.py
+├── static/
+│   └── styles.css
+├── templates/
+│   ├── champion.html
+│   └── unavailable.html
+├── tests/
+│   ├── fixtures/
+│   │   └── champions.json
+│   └── test_app.py
+├── .github/workflows/test.yml
+├── .env.example
+├── requirements.txt
+└── README.md
+```
+
+## Data source
+
+Champion metadata and images are provided by Riot Games Data Dragon.
+
+League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. This project is not endorsed by or affiliated with Riot Games.
+
+## Project note
+
+This is a learning and portfolio project focused on API integration, resilience, caching, and automated testing.
