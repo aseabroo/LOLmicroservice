@@ -1,79 +1,51 @@
-# Random League of Legends Champion Microservice
+# Random League of Legends champion
 
-## Introduction
+A small Python/Flask service that fetches champion data from Riot's Data Dragon and returns a random champion as JSON or a simple HTML page.
 
-A simple Flask-based microservice that returns a random League of Legends champion's name and image using Riot’s [Data Dragon API](https://developer.riotgames.com/docs/lol#data-dragon).
+## Run locally
 
+Use Python 3.10 or newer.
 
-## Features
+```bash
+git clone https://github.com/aseabroo/LOLmicroservice.git
+cd LOLmicroservice
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python LOLmicroservice.py
+```
 
-- `/` — Welcome/status JSON
-- `/random-champion` — Returns champion data in JSON
-- `/view-champion` — HTML view of a random champion
-- Built-in test coverage:
-  - `testMicroservice.py` — Manual browser preview
-  - `test_app.py` — Automated unit tests (Pytest)
-  - `main.py` — Unified test runner that launches server, runs tests, and shuts down
+On Windows, activate the environment with `.venv\Scripts\activate`.
 
+| Route | Response |
+| --- | --- |
+| `/` | Service message and available routes |
+| `/random-champion` | One champion's name, image URL, and sprite coordinates |
+| `/view-champion` | A simple HTML page for one champion |
 
-## Requirements
-- Python 3.x
-- Flask
-- Requests
-- pytest (for testing)
+Open http://127.0.0.1:5000/view-champion. Champion requests need an internet connection.
 
-## Installation and Setup
-1. Clone the repository: `git clone https://github.com/aseabroo/LOLmicroservice.git`.
-2. Navigate to the repository directory: `cd LOLmicroservice`.
-3. (Optional) Set up a virtual environment: `python -m venv venv` and activate it.
-4. Install required packages: `pip install -r requirements.txt`.
+## Tests
 
-## Running the Microservice
-Run the microservice using the command: `python LOLmicroservice.py`.
-The service will be available at `http://localhost:5000/random-champion` or `http://127.0.0.1:5000/random-champion`.
+Keep the server running and use a second terminal with the environment activated:
 
-## Testing with Python File
-To test the microservice, run the command: `python LOLmicroservice.py`. 
-Then, run the test file: `python testMicroservice.py`. 
-This test will generate a randomly selected champion by making a request to the microservice. The microservice will respond with the champion's name and image link.
+```bash
+python -m pytest test_app.py -v
+```
 
-## Automated Unit Tests
-pytest test_app.py -v
-Tests:
-- Root / route responds
-- JSON data structure from /random-champion
-- HTML contains expected tags
+The three existing tests make HTTP requests to the running server. They check the root response, JSON fields, and HTML tags. They are integration smoke tests and depend on the external data service.
 
-## Unified Test and Server Runner
-This script does it all:
-- Launches Flask server
-- Waits for readiness
-- Runs both tests
-- Cleans up the process
-- python main.py
+`testMicroservice.py` provides a manual preview. `main.py` is an optional macOS/Linux helper that starts the server and runs the checks; it waits for Enter before stopping the server on the successful path.
 
-## Usage in Your Project
-To use this microservice in your project, you can make an HTTP GET request to the `/random-champion` endpoint.
+## Limitations and next steps
 
-## API Endpoint Details
-- **Endpoint**: `/random-champion`
-- **Method**: GET
-- **Response Format**: JSON
-- **Example Response**:
-  ```json
-  {
-    "h": 48,
-    "image": "http://ddragon.leagueoflegends.com/cdn/13.23.1/img/champion/Urgot.png",
-    "name": "Urgot",
-    "sprite": "champion4.png",
-    "w": 48,
-    "x": 432,
-    "y": 48
-  }
+- The data URL is fixed to patch `13.23.1`.
+- External requests need timeouts and better error handling, especially on the HTML route.
+- The tests should eventually use a saved response for repeatable checks.
+- The helper needs reliable cleanup when a test fails.
 
-## UML Diagram
-![UMP Diagram](uml_diagram.png)
+## Diagram and data source
 
-## Author
-Developed by @aseabroo - QA minded engineer with a focus on automation, clarity, and clean execution
-Built for engineering demo purposes and scalable testing practice
+![Original service diagram](uml_diagram.png)
+
+Champion data and images come from [Riot Games Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Project code by Augustus Seabrooke; see [LICENSE](LICENSE).
