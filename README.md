@@ -25,27 +25,54 @@ On Windows, activate the environment with `.venv\Scripts\activate`.
 
 Open http://127.0.0.1:5000/view-champion. Champion requests need an internet connection.
 
+If champion data is unavailable, both champion routes return HTTP `503`. The JSON route returns an error object; the HTML route displays a short message. The upstream request has a five-second timeout. This is a network timeout, not a guarantee that the entire request finishes within five seconds.
+
 ## Tests
 
-Keep the server running and use a second terminal with the environment activated:
+With the environment activated:
 
 ```bash
-python -m pytest test_app.py -v
+python -m pytest test_app.py -q
 ```
 
-The three existing tests make HTTP requests to the running server. They check the root response, JSON fields, and HTML tags. They are integration smoke tests and depend on the external data service.
+The 17 test cases use Flask's test client and replace the upstream HTTP request with a controlled response. No running server or internet connection is needed for these tests.
 
-`testMicroservice.py` provides a manual preview. `main.py` is an optional macOS/Linux helper that starts the server and runs the checks; it waits for Enter before stopping the server on the successful path.
+They check successful JSON and HTML responses, request timeouts, connection failures, upstream HTTP errors, invalid JSON, and empty or malformed champion data. The small hand-written [fixture](tests/fixtures/champions.json) keeps the successful result predictable; it is not a live Data Dragon snapshot.
+
+For example, the JSON route returns this result with that fixture:
+
+```json
+{
+  "name": "Ahri",
+  "image": "https://ddragon.leagueoflegends.com/cdn/13.23.1/img/champion/Ahri.png",
+  "sprite": "champion0.png",
+  "x": 48,
+  "y": 0,
+  "w": 48,
+  "h": 48
+}
+```
+
+These tests do not verify the live Riot service or download the champion image.
+
+`testMicroservice.py` provides a manual preview against a running server. `main.py` is an optional macOS/Linux helper that starts the server, runs the preview and tests, and waits for Enter before stopping the server on the successful path.
+
+## A small maintenance change
+
+The September 2026 update adds a request timeout and a consistent failure result. Previously, the fetch function sometimes returned an error string, which the HTML route then treated as a dictionary. It also let network and JSON errors escape. Both routes now handle unavailable data explicitly.
+
+This update and its tests were developed with AI assistance. The original project remains a small learning application. A [request walkthrough](docs/request-walkthrough.md) explains the code and includes questions to practice answering.
 
 ## Limitations and next steps
 
 - The data URL is fixed to patch `13.23.1`.
-- External requests need timeouts and better error handling, especially on the HTML route.
-- The tests should eventually use a saved response for repeatable checks.
+- Every champion request downloads the data again; there is no cache or retry policy.
+- The checks cover common unusable responses, not a complete validation of every field in Riot's schema.
 - The helper needs reliable cleanup when a test fails.
+- A fresh live-data demo still needs to be checked separately.
 
 ## Diagram and data source
 
 ![Original service diagram](uml_diagram.png)
 
-Champion data and images come from [Riot Games Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Project code by Augustus Seabrooke; see [LICENSE](LICENSE).
+Champion data and images come from [Riot Games Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon). Original project by Augustus Seabrooke; see [LICENSE](LICENSE).

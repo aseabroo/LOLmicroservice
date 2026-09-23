@@ -6,21 +6,23 @@ app = Flask(__name__)
 
 def fetch_champion_data():
     """
-    Fetches the data of League of Legends champions from the Riot Games API.
+    Fetch champion data from Riot Games Data Dragon.
 
     Returns:
-        dict: A dictionary containing champion data.
-        str: Error message in case of a failure to fetch data.
+        dict: Champion data when the upstream response is usable.
+        None: The request failed or the response contained no usable data.
     """
     url = "https://ddragon.leagueoflegends.com/cdn/13.23.1/data/en_US/champion.json"
-    response = requests.get(url)
-
-    if response.status_code == 200:
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
         data = response.json()
+        if not isinstance(data, dict) or not isinstance(data.get('data'), dict):
+            return None
         champions = {
             champ: {
                 "name": data['data'][champ]['name'],
-                "image": f"http://ddragon.leagueoflegends.com/cdn/13.23.1/img/champion/{champ}.png",
+                "image": f"https://ddragon.leagueoflegends.com/cdn/13.23.1/img/champion/{champ}.png",
                 "sprite": data['data'][champ]['image']['sprite'],
                 "x": data['data'][champ]['image']['x'],
                 "y": data['data'][champ]['image']['y'],
@@ -29,9 +31,9 @@ def fetch_champion_data():
             }
             for champ in data['data']
         }
-        return champions
-    else:
-        return "Failed to fetch data"
+        return champions or None
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        return None
 
 @app.route('/')
 def index():
@@ -49,19 +51,21 @@ def random_champion():
         JSON: A JSON object containing the champion's data.
     """
     champion_data = fetch_champion_data()
-    if champion_data and isinstance(champion_data, dict):
-        champion_key, champion_info = random.choice(list(champion_data.items()))
+    if champion_data:
+        _, champion_info = random.choice(list(champion_data.items()))
         return jsonify(champion_info)
     else:
-        return jsonify({"error": "Unable to fetch champion data"}), 500
+        return jsonify({
+            "error": "Champion data is temporarily unavailable. Please try again."
+        }), 503
 
 @app.route('/view-champion')
 def view_champion():
     """
-    Endpoint to view all League of Legends champions' data.
+    Endpoint to view one random League of Legends champion.
 
     Returns:
-        JSON: A JSON object containing all champions' data.
+        HTML: The champion's name and image, or an unavailable message.
     """
     data = fetch_champion_data()
     if data:
@@ -69,11 +73,11 @@ def view_champion():
         return render_template_string("""
             <html><body style="text-align: center;">
                 <h1>{{ name }}</h1>
-                <img src="{{ image }}" alt="{{ name }}" style=height: 300px;"/>
+                <img src="{{ image }}" alt="{{ name }}" style="height: 300px;"/>
                 <p><a href="/view-champion"> New Random Champion</a></p>
             </body></html> 
         """, **champ)
-    return "<h1> Error loading champion data </h1>", 500
+    return "<h1>Champion data is temporarily unavailable. Please try again.</h1>", 503
    
 
 if __name__ == '__main__':

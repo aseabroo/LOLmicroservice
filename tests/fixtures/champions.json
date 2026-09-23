@@ -1,0 +1,14 @@
+{
+  "data": {
+    "Ahri": {
+      "name": "Ahri",
+      "image": {
+        "sprite": "champion0.png",
+        "x": 48,
+        "y": 0,
+        "w": 48,
+        "h": 48
+      }
+    }
+  }
+}

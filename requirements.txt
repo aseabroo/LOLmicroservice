@@ -1,4 +1,4 @@
-# Direct dependencies for this service and its smoke tests.
+# Direct dependencies for this service and its tests.
 Flask>=3.0,<4
 requests>=2.32,<3
 pytest>=8,<9
