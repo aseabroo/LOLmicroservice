@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ champion.name }} · Champion Randomizer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="card">
+    <p class="eyebrow">Random champion</p>
+    <h1>{{ champion.name }}</h1>
+    <img src="{{ champion.image }}" alt="{{ champion.name }}">
+    <p><a class="button" href="/view-champion">Show another champion</a></p>
+    <p><a href="/api/random-champion">View JSON endpoint</a></p>
+  </main>
+</body>
+</html>
